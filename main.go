@@ -73,32 +73,34 @@ func printTableHeader() {
 func printTableData(subtotal float64) float64 {
 	pdf.SetFontStyle("")
 	_, pageSizeH := pdf.GetPageSize()
-	lastLine := pageSizeH - marginY - lineHt
+	lastLineY := pageSizeH - marginY - lineHt
 
-	for rowJ := 0; rowJ < len(data); rowJ++ {
-		val := data[rowJ]
-		if len(val) == 3 {
+	for i := 0; i < len(data); i++ {
+		val := data[i]
+		if len(val) == 0 {
+			continue
+		}
 
-			// Column 1 / 2 / 3: Unit / Description / Price per unit
-			unit, _ := strconv.Atoi(val[0])
-			desc := val[1]
-			pricePerUnit, _ := strconv.ParseFloat(val[2], 64)
-			pricePerUnit = math.Round(pricePerUnit*100) / 100
-			totalPrice := float64(unit) * pricePerUnit
+		// Column 1 / 2 / 3: Unit / Description / Price per unit
+		unit, _ := strconv.Atoi(val[0])
+		desc := val[1]
+		pricePerUnit, _ := strconv.ParseFloat(val[2], 64)
+		pricePerUnit = math.Round(pricePerUnit*100) / 100
+		totalPrice := float64(unit) * pricePerUnit
 
-			subtotal += totalPrice
+		subtotal += totalPrice
 
-			pdf.CellFormat(colWidth[0], lineHt, fmt.Sprintf("%d", rowJ+1), "1", 0, "CM", false, 0, "")
-			pdf.CellFormat(colWidth[1], lineHt, desc, "1", 0, "LM", false, 0, "")
-			pdf.CellFormat(colWidth[2], lineHt, fmt.Sprintf("%d", unit), "1", 0, "CM", false, 0, "")
-			pdf.CellFormat(colWidth[3], lineHt, fmt.Sprintf("%.2f", pricePerUnit), "1", 0, "CM", false, 0, "")
-			pdf.CellFormat(colWidth[4], lineHt, fmt.Sprintf("%.2f", totalPrice), "1", 0, "CM", false, 0, "")
-			pdf.Ln(-1)
+		pdf.CellFormat(colWidth[0], lineHt, fmt.Sprintf("%d", i+1), "1", 0, "CM", false, 0, "")
+		pdf.CellFormat(colWidth[1], lineHt, desc, "1", 0, "LM", false, 0, "")
+		pdf.CellFormat(colWidth[2], lineHt, fmt.Sprintf("%d", unit), "1", 0, "CM", false, 0, "")
+		pdf.CellFormat(colWidth[3], lineHt, fmt.Sprintf("%.2f", pricePerUnit), "1", 0, "CM", false, 0, "")
+		pdf.CellFormat(colWidth[4], lineHt, fmt.Sprintf("%.2f", totalPrice), "1", 0, "CM", false, 0, "")
+		pdf.Ln(-1)
 
-			if pdf.GetY() > lastLine {
-				printTableHeader()
-				pdf.SetFontStyle("")
-			}
+		fmt.Println(pdf.GetY(), lastLineY)
+		if pdf.GetY() > lastLineY {
+			printTableHeader()
+			pdf.SetFontStyle("")
 		}
 	}
 
