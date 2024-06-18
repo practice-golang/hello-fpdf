@@ -90,7 +90,7 @@ func main() {
 
 	lineHt := 10.0
 	const colNumber = 5
-	header := [colNumber]string{"No", "Description", "Quantity", "Unit Price ($)", "Price ($)"}
+	header := [colNumber]string{"No", "설명", "수량", "단가 ($)", "총금액 ($)"}
 	colWidth := [colNumber]float64{10.0, 75.0, 25.0, 40.0, 40.0}
 
 	// Headers
@@ -135,19 +135,19 @@ func main() {
 		leftIndent += colWidth[i]
 	}
 	pdf.SetX(marginX + leftIndent)
-	pdf.CellFormat(colWidth[3], lineHt, "Subtotal", "1", 0, "CM", false, 0, "")
+	pdf.CellFormat(colWidth[3], lineHt, "금액 합계", "1", 0, "CM", false, 0, "")
 	pdf.CellFormat(colWidth[4], lineHt, fmt.Sprintf("%.2f", subtotal), "1", 0, "CM", false, 0, "")
 	pdf.Ln(-1)
 
 	taxAmount := math.Round(subtotal*float64(20)) / 100
 	pdf.SetX(marginX + leftIndent)
-	pdf.CellFormat(colWidth[3], lineHt, "Tax Amount", "1", 0, "CM", false, 0, "")
+	pdf.CellFormat(colWidth[3], lineHt, "부가세", "1", 0, "CM", false, 0, "")
 	pdf.CellFormat(colWidth[4], lineHt, fmt.Sprintf("%.2f", taxAmount), "1", 0, "CM", false, 0, "")
 	pdf.Ln(-1)
 
 	grandTotal := subtotal + taxAmount
 	pdf.SetX(marginX + leftIndent)
-	pdf.CellFormat(colWidth[3], lineHt, "Grand total", "1", 0, "CM", false, 0, "")
+	pdf.CellFormat(colWidth[3], lineHt, "지불 합계", "1", 0, "CM", false, 0, "")
 	pdf.CellFormat(colWidth[4], lineHt, fmt.Sprintf("%.2f", grandTotal), "1", 0, "CM", false, 0, "")
 	pdf.Ln(-1)
 
