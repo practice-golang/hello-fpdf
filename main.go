@@ -50,11 +50,10 @@ var data [][]string = [][]string{
 func main() {
 	marginX := 10.0
 	marginY := 20.0
+	gapY := 2.0
 
 	// pdf := fpdf.New("L", "mm", "A4", "")
 	pdf := fpdf.New("P", "mm", "A4", "")
-
-	pdf.SetMargins(marginX, marginY, marginX)
 
 	// https://pkg.go.dev/github.com/jung-kurt/gofpdf#Fpdf.AddUTF8Font
 	pdf.AddUTF8Font("gamtan", "", "fonts/gamtan_road_dotum-regular.ttf")
@@ -62,19 +61,32 @@ func main() {
 	pdf.AddUTF8Font("gamtan", "I", "fonts/gamtan_road_dotum-regular.ttf")
 	pdf.AddUTF8Font("gamtan", "BI", "fonts/gamtan_road_dotum-bold.ttf")
 
+	pdf.SetMargins(marginX, marginY, marginX)
+	pdf.AddPage()
+	pageW, _ := pdf.GetPageSize()
+	safeAreaW := pageW - 2*marginX
+
+	pdf.ImageOptions("assets/gopher.png", 10, 10, 30, 40, false, fpdf.ImageOptions{ImageType: "PNG", ReadDpi: true}, 0, "")
+
 	// pdf.SetFont("Arial", "B", 16)
 	pdf.SetFont("gamtan", "B", 16)
 	_, lineHeight := pdf.GetFontSize()
-	currentY := pdf.GetY() + lineHeight
+	lineBreak := lineHeight + float64(1)
+
+	leftY := pdf.GetY() + lineHeight + gapY
+	newY := leftY
+
+	invoiceDetailW := float64(40)
+	pdf.SetXY(safeAreaW/2+20, newY)
+	pdf.Cell(invoiceDetailW, lineHeight, "Invoice No.:")
+	pdf.Cell(invoiceDetailW, lineHeight, "a12345")
+	pdf.Ln(lineBreak)
+	pdf.SetX(safeAreaW/2 + 30)
+
+	currentY := pdf.GetY() + 20
 	pdf.SetY(currentY)
 	pdf.Cell(40, 10, "Company Name")
-
-	pdf.ImageOptions("assets/gopher.png", 0, 0, 65, 25, false, fpdf.ImageOptions{ImageType: "PNG", ReadDpi: true}, 0, "")
-
-	pdf.AddPage()
-
-	// pdf.Cell(40, 10, "Hello, world!!")
-	// pdf.Cell(-40, 30, "안녕, 세상!!")
+	pdf.Ln(-1)
 
 	lineHt := 10.0
 	const colNumber = 5
