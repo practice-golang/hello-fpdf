@@ -73,7 +73,7 @@ func printTableHeader() {
 func printTableData(subtotal float64) float64 {
 	pdf.SetFontStyle("")
 	_, pageSizeH := pdf.GetPageSize()
-	lastLine := pageSizeH - marginY - gapY - lineHt
+	lastLine := pageSizeH - marginY - lineHt
 
 	for rowJ := 0; rowJ < len(data); rowJ++ {
 		val := data[rowJ]
