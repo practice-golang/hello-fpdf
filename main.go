@@ -47,13 +47,68 @@ var data [][]string = [][]string{
 	{"10", "cc", "3.63"},
 }
 
-func main() {
-	marginX := 10.0
-	marginY := 20.0
-	gapY := 2.0
+var pdf *fpdf.Fpdf
 
-	// pdf := fpdf.New("L", "mm", "A4", "")
-	pdf := fpdf.New("P", "mm", "A4", "")
+var (
+	marginX float64 = 10.0
+	marginY float64 = 20.0
+	gapY    float64 = 2.0
+
+	lineHt   float64   = 10.0
+	colWidth []float64 = []float64{10.0, 75.0, 25.0, 40.0, 40.0}
+)
+
+func printTableHeader() {
+	header := []string{"No", "설명", "수량", "단가 ($)", "총금액 ($)"}
+	pdf.SetFontStyle("B")
+	pdf.SetFillColor(200, 200, 200)
+
+	colNumber := len(colWidth)
+	for colJ := 0; colJ < colNumber; colJ++ {
+		pdf.CellFormat(colWidth[colJ], lineHt, header[colJ], "1", 0, "CM", true, 0, "")
+	}
+	pdf.Ln(-1)
+}
+
+func printTableData(subtotal float64) float64 {
+	pdf.SetFontStyle("")
+	_, pageSizeH := pdf.GetPageSize()
+	lastLine := pageSizeH - marginY - gapY - lineHt
+
+	for rowJ := 0; rowJ < len(data); rowJ++ {
+		val := data[rowJ]
+		if len(val) == 3 {
+
+			// Column 1 / 2 / 3: Unit / Description / Price per unit
+			unit, _ := strconv.Atoi(val[0])
+			desc := val[1]
+			pricePerUnit, _ := strconv.ParseFloat(val[2], 64)
+			pricePerUnit = math.Round(pricePerUnit*100) / 100
+			totalPrice := float64(unit) * pricePerUnit
+
+			subtotal += totalPrice
+
+			pdf.CellFormat(colWidth[0], lineHt, fmt.Sprintf("%d", rowJ+1), "1", 0, "CM", false, 0, "")
+			pdf.CellFormat(colWidth[1], lineHt, desc, "1", 0, "LM", false, 0, "")
+			pdf.CellFormat(colWidth[2], lineHt, fmt.Sprintf("%d", unit), "1", 0, "CM", false, 0, "")
+			pdf.CellFormat(colWidth[3], lineHt, fmt.Sprintf("%.2f", pricePerUnit), "1", 0, "CM", false, 0, "")
+			pdf.CellFormat(colWidth[4], lineHt, fmt.Sprintf("%.2f", totalPrice), "1", 0, "CM", false, 0, "")
+			pdf.Ln(-1)
+
+			if pdf.GetY() > lastLine {
+				printTableHeader()
+				pdf.SetFontStyle("")
+			}
+		}
+	}
+
+	return subtotal
+}
+
+func main() {
+
+	// pdf = fpdf.New("L", "mm", "A4", "")
+	pdf = fpdf.New("P", "mm", "A4", "")
 
 	// https://pkg.go.dev/github.com/jung-kurt/gofpdf#Fpdf.AddUTF8Font
 	pdf.AddUTF8Font("gamtan", "", "fonts/gamtan_road_dotum-regular.ttf")
@@ -63,13 +118,20 @@ func main() {
 
 	pdf.SetMargins(marginX, marginY, marginX)
 	pdf.AddPage()
+
+	// Set footer for page
+	pdf.SetFooterFunc(func() {
+		pdf.SetY(-10)
+		pdf.SetFont("Arial", "I", 14)
+		pdf.CellFormat(0, 10, "- "+fmt.Sprint(pdf.PageNo())+" -", "", 0, "C", false, 0, "")
+	})
+
 	pageW, _ := pdf.GetPageSize()
 	safeAreaW := pageW - 2*marginX
 
 	pdf.ImageOptions("assets/gopher.png", 10, 10, 30, 40, false, fpdf.ImageOptions{ImageType: "PNG", ReadDpi: true}, 0, "")
 
-	// pdf.SetFont("Arial", "B", 16)
-	pdf.SetFont("gamtan", "B", 16)
+	pdf.SetFont("gamtan", "", 16)
 	_, lineHeight := pdf.GetFontSize()
 	lineBreak := lineHeight + float64(1)
 
@@ -85,48 +147,15 @@ func main() {
 
 	currentY := pdf.GetY() + 20
 	pdf.SetY(currentY)
-	pdf.Cell(40, 10, "Company Name")
+	pdf.Cell(40, 10, "n월 정산")
 	pdf.Ln(-1)
 
-	lineHt := 10.0
-	const colNumber = 5
-	header := [colNumber]string{"No", "설명", "수량", "단가 ($)", "총금액 ($)"}
-	colWidth := [colNumber]float64{10.0, 75.0, 25.0, 40.0, 40.0}
-
-	// Headers
-	pdf.SetFontStyle("B")
-	pdf.SetFillColor(200, 200, 200)
-	for colJ := 0; colJ < colNumber; colJ++ {
-		pdf.CellFormat(colWidth[colJ], lineHt, header[colJ], "1", 0, "CM", true, 0, "")
-	}
-
-	pdf.Ln(-1)
+	printTableHeader() // Table headers
 
 	// Table data
 	pdf.SetFontStyle("")
 	subtotal := 0.0
-
-	for rowJ := 0; rowJ < len(data); rowJ++ {
-		val := data[rowJ]
-		if len(val) == 3 {
-			// Column 1: Unit
-			// Column 2: Description
-			// Column 3: Price per unit
-			unit, _ := strconv.Atoi(val[0])
-			desc := val[1]
-			pricePerUnit, _ := strconv.ParseFloat(val[2], 64)
-			pricePerUnit = math.Round(pricePerUnit*100) / 100
-			totalPrice := float64(unit) * pricePerUnit
-			subtotal += totalPrice
-
-			pdf.CellFormat(colWidth[0], lineHt, fmt.Sprintf("%d", rowJ+1), "1", 0, "CM", false, 0, "")
-			pdf.CellFormat(colWidth[1], lineHt, desc, "1", 0, "LM", false, 0, "")
-			pdf.CellFormat(colWidth[2], lineHt, fmt.Sprintf("%d", unit), "1", 0, "CM", false, 0, "")
-			pdf.CellFormat(colWidth[3], lineHt, fmt.Sprintf("%.2f", pricePerUnit), "1", 0, "CM", false, 0, "")
-			pdf.CellFormat(colWidth[4], lineHt, fmt.Sprintf("%.2f", totalPrice), "1", 0, "CM", false, 0, "")
-			pdf.Ln(-1)
-		}
-	}
+	subtotal = printTableData(subtotal)
 
 	// Calculate the subtotal
 	pdf.SetFontStyle("B")
