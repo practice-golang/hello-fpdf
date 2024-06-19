@@ -173,7 +173,7 @@ var (
 	lineHt float64 = 10.0
 
 	// tableColumnsWidthBase []float64 = []float64{10.0, 75.0, 25.0, 40.0, 40.0} // 190
-	tableColumnsWidthBase []float64 = []float64{5.26, 39.47, 13.16, 21.05, 21.05} // 100
+	tableColumnsWidthBase []float64 = []float64{7.26, 39.47, 11.16, 21.05, 21.05} // 100
 	colWidth              []float64
 )
 
