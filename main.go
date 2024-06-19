@@ -199,7 +199,9 @@ func printTableHeader() {
 	pdf.Ln(-1)
 }
 
-func printTableData(subtotal float64) float64 {
+func printTableData() {
+	var subtotal float64 = 0.0
+
 	pdf.SetFontStyle("")
 	_, pageSizeH := pdf.GetPageSize()
 	lastLineY := pageSizeH - pageDefs.MarginVertical - lineHt
@@ -226,14 +228,34 @@ func printTableData(subtotal float64) float64 {
 		pdf.CellFormat(colWidth[4], lineHt, fmt.Sprintf("%.2f", totalPrice), "1", 0, "CM", false, 0, "")
 		pdf.Ln(-1)
 
-		fmt.Println("no Y:", pdf.GetY(), math.Floor(lastLineY*100)/100)
 		if pdf.GetY() >= math.Floor(lastLineY*100)/100 {
 			printTableHeader()
 			pdf.SetFontStyle("")
 		}
 	}
 
-	return subtotal
+	// Print subtotal
+	pdf.SetFontStyle("B")
+	leftIndent := 0.0
+	for i := 0; i < 3; i++ {
+		leftIndent += colWidth[i]
+	}
+	pdf.SetX(pageDefs.MarginHorizon + leftIndent)
+	pdf.CellFormat(colWidth[3], lineHt, "금액 합계", "1", 0, "CM", false, 0, "")
+	pdf.CellFormat(colWidth[4], lineHt, fmt.Sprintf("%.2f", subtotal), "1", 0, "CM", false, 0, "")
+	pdf.Ln(-1)
+
+	taxAmount := math.Round(subtotal*float64(20)) / 100
+	pdf.SetX(pageDefs.MarginHorizon + leftIndent)
+	pdf.CellFormat(colWidth[3], lineHt, "부가세", "1", 0, "CM", false, 0, "")
+	pdf.CellFormat(colWidth[4], lineHt, fmt.Sprintf("%.2f", taxAmount), "1", 0, "CM", false, 0, "")
+	pdf.Ln(-1)
+
+	grandTotal := subtotal + taxAmount
+	pdf.SetX(pageDefs.MarginHorizon + leftIndent)
+	pdf.CellFormat(colWidth[3], lineHt, "지불 합계", "1", 0, "CM", false, 0, "")
+	pdf.CellFormat(colWidth[4], lineHt, fmt.Sprintf("%.2f", grandTotal), "1", 0, "CM", false, 0, "")
+	pdf.Ln(-1)
 }
 
 func main() {
@@ -241,7 +263,7 @@ func main() {
 	pdf = fpdf.New("P", "mm", "A4", "")
 
 	pageSizeW, pageSizeH := pdf.GetPageSize()
-	fmt.Printf("Page size: %2f , %2f\n", pageSizeW, pageSizeH)
+	// fmt.Printf("Page size: %2f , %2f\n", pageSizeW, pageSizeH)
 
 	pageDefs.PageWidth = pageSizeW
 	pageDefs.PageHeight = pageSizeH
@@ -296,31 +318,7 @@ func main() {
 
 	// Table data
 	pdf.SetFontStyle("")
-	subtotal := 0.0
-	subtotal = printTableData(subtotal)
-
-	// Calculate the subtotal
-	pdf.SetFontStyle("B")
-	leftIndent := 0.0
-	for i := 0; i < 3; i++ {
-		leftIndent += colWidth[i]
-	}
-	pdf.SetX(pageDefs.MarginHorizon + leftIndent)
-	pdf.CellFormat(colWidth[3], lineHt, "금액 합계", "1", 0, "CM", false, 0, "")
-	pdf.CellFormat(colWidth[4], lineHt, fmt.Sprintf("%.2f", subtotal), "1", 0, "CM", false, 0, "")
-	pdf.Ln(-1)
-
-	taxAmount := math.Round(subtotal*float64(20)) / 100
-	pdf.SetX(pageDefs.MarginHorizon + leftIndent)
-	pdf.CellFormat(colWidth[3], lineHt, "부가세", "1", 0, "CM", false, 0, "")
-	pdf.CellFormat(colWidth[4], lineHt, fmt.Sprintf("%.2f", taxAmount), "1", 0, "CM", false, 0, "")
-	pdf.Ln(-1)
-
-	grandTotal := subtotal + taxAmount
-	pdf.SetX(pageDefs.MarginHorizon + leftIndent)
-	pdf.CellFormat(colWidth[3], lineHt, "지불 합계", "1", 0, "CM", false, 0, "")
-	pdf.CellFormat(colWidth[4], lineHt, fmt.Sprintf("%.2f", grandTotal), "1", 0, "CM", false, 0, "")
-	pdf.Ln(-1)
+	printTableData()
 
 	err := pdf.OutputFileAndClose("hello.pdf")
 	if err != nil {
